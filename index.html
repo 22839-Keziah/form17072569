@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบลงทะเบียนและเก็บข้อมูลนักเรียน</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Sarabun & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            background-color: #fcfcfc;
+            background-image: 
+                radial-gradient(#fee2e2 1px, transparent 1px), 
+                radial-gradient(#fee2e2 1px, #fcfcfc 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+        }
+
+        /* Custom scrollbar in red tone */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ef4444;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b91c1c;
+        }
+
+        /* Floating Animation for Header Graphic */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating-logo {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Focus Ring and Input styles */
+        .custom-input {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .custom-input:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+            outline: none;
+        }
+
+        /* Dynamic badge pulse */
+        .live-badge::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            top: 2px;
+            right: -2px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.9; }
+            50% { transform: scale(1.3); opacity: 0.4; }
+            100% { transform: scale(0.9); opacity: 0.9; }
+        }
+    </style>
+</head>
+<body class="min-h-screen py-10 px-4 md:px-8 flex flex-col items-center justify-center">
+
+    <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-red-100 overflow-hidden transition-all duration-300 hover:shadow-red-100/50 hover:shadow-3xl">
+        
+        <!-- Header Banner Area -->
+        <div class="relative bg-gradient-to-r from-red-700 via-red-600 to-rose-600 p-8 text-white text-center md:text-left md:flex md:items-center md:justify-between border-b-4 border-red-800">
+            <!-- Decorative Background Graphic Shapes -->
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_45%)] pointer-events-none"></div>
+            <div class="absolute -bottom-8 -left-8 w-24 h-24 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
+            
+            <div class="relative z-10 flex flex-col md:flex-row items-center gap-6">
+                <!-- Floating Icon Emblem -->
+                <div class="floating-logo w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-lg">
+                    <i class="fa-solid fa-graduation-cap text-4xl text-white"></i>
+                </div>
+                <div>
+                    <span class="inline-block bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2 backdrop-blur-sm">ระบบสารสนเทศสถานศึกษา</span>
+                    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">แบบฟอร์มเก็บข้อมูลนักเรียน</h1>
+                    <p class="text-red-100 mt-1 text-sm md:text-base font-light">โปรดกรอกข้อมูลส่วนบุคคลและการศึกษาให้ครบถ้วนและถูกต้องตามความเป็นจริง</p>
+                </div>
+            </div>
+            
+            <div class="relative z-10 mt-4 md:mt-0">
+                <span class="inline-flex items-center px-4 py-2 rounded-xl text-xs font-semibold bg-white text-red-700 shadow-md">
+                    <span class="relative mr-2 flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    รับข้อมูลปีการศึกษา 2569
+                </span>
+            </div>
+        </div>
+
+        <!-- Form Area -->
+        <form id="studentRegistrationForm" class="p-6 md:p-10 space-y-10" onsubmit="handleFormSubmit(event)" onreset="handleFormReset()">
+            
+            <!-- 1. ข้อมูลส่วนตัว -->
+            <div class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                <div class="flex items-center gap-3 border-b border-red-100 pb-3 mb-6">
+                    <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white">
+                        <i class="fa-solid fa-user text-sm"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800">1. ข้อมูลส่วนตัว</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <!-- คำนำหน้า -->
+                    <div class="md:col-span-3">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="prefix">คำนำหน้า <span class="text-red-500">*</span></label>
+                        <select id="prefix" required class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                            <option value="" disabled selected>เลือกคำนำหน้า</option>
+                            <option value="เด็กชาย">เด็กชาย</option>
+                            <option value="เด็กหญิง">เด็กหญิง</option>
+                            <option value="นาย">นาย</option>
+                            <option value="นางสาว">นางสาว</option>
+                        </select>
+                    </div>
+
+                    <!-- ชื่อ-นามสกุล -->
+                    <div class="md:col-span-6">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="fullName">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                                <i class="fa-regular fa-id-card"></i>
+                            </span>
+                            <input type="text" id="fullName" required placeholder="เช่น สมชาย ใจดี" class="custom-input w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                        </div>
+                    </div>
+
+                    <!-- ชื่อเล่น -->
+                    <div class="md:col-span-3">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="nickname">ชื่อเล่น</label>
+                        <input type="text" id="nickname" placeholder="เช่น บอย" class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                    </div>
+
+                    <!-- เลขประจำตัวนักเรียน -->
+                    <div class="md:col-span-4">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="studentId">เลขประจำตัวนักเรียน <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                                <i class="fa-solid fa-fingerprint"></i>
+                            </span>
+                            <input type="text" id="studentId" required pattern="[0-9]{5}" placeholder="รหัส 5 หลัก (เช่น 12345)" class="custom-input w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">ต้องเป็นตัวเลข 5 หลักเท่านั้น</p>
+                    </div>
+
+                    <!-- วันเดือนปีเกิด -->
+                    <div class="md:col-span-5">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="dob">วันเดือนปีเกิด <span class="text-red-500">*</span></label>
+                        <input type="date" id="dob" required onchange="calculateAge()" class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                    </div>
+
+                    <!-- อายุ -->
+                    <div class="md:col-span-3">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="age">อายุ (ปี) <span class="text-red-500">*</span></label>
+                        <input type="number" id="age" required min="1" max="100" placeholder="คำนวณอัตโนมัติ" class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-gray-100 text-gray-700 font-semibold" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. ข้อมูลการติดต่อ -->
+            <div class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                <div class="flex items-center gap-3 border-b border-red-100 pb-3 mb-6">
+                    <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white">
+                        <i class="fa-solid fa-address-book text-sm"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800">2. ข้อมูลการติดต่อ</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- อีเมล -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="email">อีเมลติดต่อ <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                                <i class="fa-regular fa-envelope"></i>
+                            </span>
+                            <input type="email" id="email" required placeholder="example@school.ac.th" class="custom-input w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                        </div>
+                    </div>
+
+                    <!-- เบอร์โทรศัพท์ -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="tel">เบอร์โทรศัพท์มือถือ <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                                <i class="fa-solid fa-phone"></i>
+                            </span>
+                            <input type="tel" id="tel" required pattern="0[0-9]{9}" placeholder="เช่น 0812345678" class="custom-input w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">กรอกตัวเลข 10 หลักขึ้นต้นด้วย 0</p>
+                    </div>
+
+                    <!-- ที่อยู่ -->
+                    <div class="md:col-span-2">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="address">ที่อยู่ปัจจุบันตามทะเบียนบ้าน <span class="text-red-500">*</span></label>
+                        <textarea id="address" required rows="3" placeholder="กรุณากรอก บ้านเลขที่ หมู่ ซอย ถนน ตำบล อำเภอ..." class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. ข้อมูลส่วนบุคคล -->
+            <div class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                <div class="flex items-center gap-3 border-b border-red-100 pb-3 mb-6">
+                    <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white">
+                        <i class="fa-solid fa-sliders text-sm"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800">3. ข้อมูลส่วนบุคคล</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <!-- เพศ -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-3">เพศ <span class="text-red-500">*</span></label>
+                        <div class="flex items-center gap-4 mt-1">
+                            <label class="flex items-center cursor-pointer group">
+                                <input type="radio" name="gender" value="ชาย" required class="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500 focus:ring-2">
+                                <span class="ml-2 text-sm text-gray-700 group-hover:text-red-600 transition">ชาย</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer group">
+                                <input type="radio" name="gender" value="หญิง" required class="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500 focus:ring-2">
+                                <span class="ml-2 text-sm text-gray-700 group-hover:text-red-600 transition">หญิง</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer group">
+                                <input type="radio" name="gender" value="อื่นๆ" required class="w-4 h-4 text-red-600 border-gray-300 focus:ring-red-500 focus:ring-2">
+                                <span class="ml-2 text-sm text-gray-700 group-hover:text-red-600 transition">ทางเลือก</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- ศาสนา -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="religion">ศาสนา <span class="text-red-500">*</span></label>
+                        <select id="religion" required class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                            <option value="" disabled selected>เลือกศาสนา</option>
+                            <option value="พุทธ">พุทธ</option>
+                            <option value="คริสต์">คริสต์</option>
+                            <option value="อิสลาม">อิสลาม</option>
+                            <option value="ฮินดู">ฮินดู</option>
+                            <option value="ซิกข์">ซิกข์</option>
+                            <option value="อื่นๆ">อื่นๆ/ไม่ระบุ</option>
+                        </select>
+                    </div>
+
+                    <!-- จังหวัด -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="province">จังหวัดเกิด <span class="text-red-500">*</span></label>
+                        <select id="province" required class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                            <option value="" disabled selected>เลือกจังหวัด</option>
+                            <option value="กรุงเทพมหานคร">กรุงเทพมหานคร</option>
+                            <option value="เชียงใหม่">เชียงใหม่</option>
+                            <option value="นนทบุรี">นนทบุรี</option>
+                            <option value="สมุทรปราการ">สมุทรปราการ</option>
+                            <option value="ชลบุรี">ชลบุรี</option>
+                            <option value="นครราชสีมา">นครราชสีมา</option>
+                            <option value="ภูเก็ต">ภูเก็ต</option>
+                            <option value="ขอนแก่น">ขอนแก่น</option>
+                            <option value="อื่นๆ">จังหวัดอื่นๆ</option>
+                        </select>
+                    </div>
+
+                    <!-- กรุ๊ปเลือด -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="bloodGroup">กรุ๊ปเลือด <span class="text-red-500">*</span></label>
+                        <select id="bloodGroup" required class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                            <option value="" disabled selected>เลือกกรุ๊ปเลือด</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="O">O</option>
+                            <option value="AB">AB</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. ความสนใจ -->
+            <div class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                <div class="flex items-center gap-3 border-b border-red-100 pb-3 mb-6">
+                    <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white">
+                        <i class="fa-solid fa-heart text-sm"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800">4. ความสนใจ</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <!-- งานอดิเรก -->
+                    <div class="md:col-span-6">
+                        <label class="block text-gray-700 text-sm font-semibold mb-3">งานอดิเรก (เลือกได้มากกว่า 1 ข้อ)</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="flex items-center cursor-pointer group">
+                                <input type="checkbox" name="hobbies" value="อ่านหนังสือ" class="w-4 h-4 rounded text-red-600 border-gray-300 focus:ring-red-500">
+                                <span class="ml-2 text-sm text-gray-700 group-hover:text-red-600 transition">อ่านหนังสือ</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer group">
+                                <input type="checkbox" name="hobbies" value="เล่นดนตรี" class="w-4 h-4 rounded text-red-600 border-gray-300 focus:ring-red-500">
+                                <span class="ml-2 text-sm text-gray-700 group-hover:text-red-600 transition">เล่นดนตรี</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer group">
+                                <input type="checkbox" name="hobbies" value="เล่นกีฬา" class="w-4 h-4 rounded text-red-600 border-gray-300 focus:ring-red-500">
+                                <span class="ml-2 text-sm text-gray-700 group-hover:text-red-600 transition">เล่นกีฬา/ออกกำลังกาย</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer group">
+                                <input type="checkbox" name="hobbies" value="วาดภาพ" class="w-4 h-4 rounded text-red-600 border-gray-300 focus:ring-red-500">
+                                <span class="ml-2 text-sm text-gray-700 group-hover:text-red-600 transition">วาดรูป/ศิลปะ</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer group">
+                                <input type="checkbox" name="hobbies" value="เขียนโค้ด" class="w-4 h-4 rounded text-red-600 border-gray-300 focus:ring-red-500">
+                                <span class="ml-2 text-sm text-gray-700 group-hover:text-red-600 transition">เขียนโปรแกรม</span>
+                            </label>
+                            <label class="flex items-center cursor-pointer group">
+                                <input type="checkbox" name="hobbies" value="เล่นเกม" class="w-4 h-4 rounded text-red-600 border-gray-300 focus:ring-red-500">
+                                <span class="ml-2 text-sm text-gray-700 group-hover:text-red-600 transition">เล่นเกมส์</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- สีที่ชอบ -->
+                    <div class="md:col-span-3">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="favColor">สีที่ชอบ</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" id="favColor" value="#dc2626" oninput="updateColorHex(this.value)" class="w-12 h-12 rounded-xl cursor-pointer border border-gray-300 shadow-sm p-1 bg-white">
+                            <div>
+                                <span id="colorHexText" class="font-mono text-sm text-gray-600 font-bold bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">#dc2626</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">คลิกเพื่อเลือกโทนสีที่ต้องการ</p>
+                    </div>
+
+                    <!-- เว็บไซต์ที่ชอบ -->
+                    <div class="md:col-span-3">
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="favUrl">เว็บไซต์ที่ชอบศึกษาหาความรู้</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 font-mono text-xs">
+                                <i class="fa-solid fa-globe"></i>
+                            </span>
+                            <input type="url" id="favUrl" placeholder="https://example.com" class="custom-input w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700 text-sm">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. ข้อมูลการศึกษา -->
+            <div class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                <div class="flex items-center gap-3 border-b border-red-100 pb-3 mb-6">
+                    <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white">
+                        <i class="fa-solid fa-book-open text-sm"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800">5. ข้อมูลการศึกษา</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <!-- ระดับชั้น -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="gradeLevel">ระดับชั้นเรียน <span class="text-red-500">*</span></label>
+                        <select id="gradeLevel" required class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                            <option value="" disabled selected>เลือกระดับชั้น</option>
+                            <option value="มัธยมศึกษาปีที่ 1">มัธยมศึกษาปีที่ 1</option>
+                            <option value="มัธยมศึกษาปีที่ 2">มัธยมศึกษาปีที่ 2</option>
+                            <option value="มัธยมศึกษาปีที่ 3">มัธยมศึกษาปีที่ 3</option>
+                            <option value="มัธยมศึกษาปีที่ 4">มัธยมศึกษาปีที่ 4</option>
+                            <option value="มัธยมศึกษาปีที่ 5">มัธยมศึกษาปีที่ 5</option>
+                            <option value="มัธยมศึกษาปีที่ 6">มัธยมศึกษาปีที่ 6</option>
+                        </select>
+                    </div>
+
+                    <!-- ห้องเรียน -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="classroom">ห้องเรียน <span class="text-red-500">*</span></label>
+                        <select id="classroom" required class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                            <option value="" disabled selected>เลือกห้องเรียน</option>
+                            <option value="ห้อง 1">ห้อง 1 (ห้องเรียนพิเศษ IEP/SMTE)</option>
+                            <option value="ห้อง 2">ห้อง 2</option>
+                            <option value="ห้อง 3">ห้อง 3</option>
+                            <option value="ห้อง 4">ห้อง 4</option>
+                            <option value="ห้อง 5">ห้อง 5</option>
+                        </select>
+                    </div>
+
+                    <!-- แผนการเรียน -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="studyPlan">แผนการเรียน <span class="text-red-500">*</span></label>
+                        <select id="studyPlan" required class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                            <option value="" disabled selected>เลือกแผนการเรียน</option>
+                            <option value="วิทยาศาสตร์-คณิตศาสตร์">วิทยาศาสตร์-คณิตศาสตร์</option>
+                            <option value="ศิลป์-คำนวณ">ศิลป์-คำนวณ</option>
+                            <option value="ศิลป์-ภาษา">ศิลป์-ภาษา</option>
+                            <option value="เทคโนโลยีและคอมพิวเตอร์">เทคโนโลยีและคอมพิวเตอร์</option>
+                            <option value="ทั่วไป">ทั่วไป</option>
+                        </select>
+                    </div>
+
+                    <!-- เกรดเฉลี่ย -->
+                    <div>
+                        <label class="block text-gray-700 text-sm font-semibold mb-2" for="gpa">เกรดเฉลี่ยสะสม (GPAX) <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                                <i class="fa-solid fa-star-half-stroke"></i>
+                            </span>
+                            <input type="number" id="gpa" required min="0.00" max="4.00" step="0.01" placeholder="เช่น 3.75" class="custom-input w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700">
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">ค่าต้องอยู่ในช่วง 0.00 - 4.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. การอัปโหลดไฟล์ -->
+            <div class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                <div class="flex items-center gap-3 border-b border-red-100 pb-3 mb-6">
+                    <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white">
+                        <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800">6. การอัปโหลดไฟล์เอกสาร</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- รูปภาพประจำตัว -->
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center">
+                        <label class="block text-gray-700 text-sm font-bold mb-4 self-start">รูปภาพประจำตัวนักเรียน (ไฟล์รูปภาพ เท่านั้น)</label>
+                        
+                        <!-- Image Preview Frame -->
+                        <div class="relative w-36 h-36 mb-4 bg-gray-100 rounded-full border-4 border-white shadow-md flex items-center justify-center overflow-hidden group">
+                            <img id="avatarPreview" src="https://placehold.co/150x150/fee2e2/dc2626?text=Avatar" alt="พรีวิวรูปภาพ" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                <span class="text-white text-xs"><i class="fa-solid fa-camera mr-1"></i> เปลี่ยนรูป</span>
+                            </div>
+                        </div>
+
+                        <input type="file" id="avatarFile" accept="image/*" onchange="previewAvatar(event)" class="block w-full text-sm text-gray-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-red-50 file:text-red-700
+                            hover:file:bg-red-100 cursor-pointer">
+                        <p class="text-[11px] text-gray-400 mt-2 text-center">รองรับไฟล์ JPG, JPEG, PNG ขนาดไม่เกิน 2MB</p>
+                    </div>
+
+                    <!-- เอกสารเพิ่มเติม -->
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">เอกสารเพิ่มเติม (สำเนาทะเบียนบ้าน/วุฒิการศึกษา)</label>
+                            <p class="text-xs text-gray-500 mb-4">โปรดอัปโหลดสำเนาที่เซ็นรับรองสำเนาถูกต้องเรียบร้อยแล้วเป็นไฟล์ PDF หรือไฟล์ภาพ</p>
+                        </div>
+                        
+                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-red-500 transition cursor-pointer relative group">
+                            <input type="file" id="documentFile" accept=".pdf,image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <div class="space-y-2">
+                                <i class="fa-regular fa-file-pdf text-3xl text-gray-400 group-hover:text-red-600 transition"></i>
+                                <div class="text-sm text-gray-600">
+                                    <span class="text-red-600 font-bold hover:underline">คลิกเพื่ออัปโหลด</span> หรือลากไฟล์มาวางที่นี่
+                                </div>
+                                <p class="text-xs text-gray-400">PDF, PNG, JPG ขนาดไม่เกิน 5MB</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. ความคิดเห็นเพิ่มเติม -->
+            <div class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+                <div class="flex items-center gap-3 border-b border-red-100 pb-3 mb-6">
+                    <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white">
+                        <i class="fa-regular fa-comment-dots text-sm"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800">7. ข้อมูล/ความคิดเห็นเพิ่มเติม</h2>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 text-sm font-semibold mb-2" for="comments">หมายเหตุความต้องการพิเศษ โรคประจำตัว หรือสิ่งที่สถานศึกษาควรทราบ</label>
+                    <textarea id="comments" rows="3" placeholder="เช่น มีโรคประจำตัวเป็นหอบหืด, มีแพ้อาหารประเภทถั่ว..." class="custom-input w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700"></textarea>
+                </div>
+            </div>
+
+            <!-- 8. ยืนยันข้อมูล -->
+            <div class="space-y-6">
+                <!-- ยืนยันข้อมูล Checkbox -->
+                <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <label class="flex items-start cursor-pointer group">
+                        <input type="checkbox" id="terms" required class="mt-1 w-4 h-4 rounded text-red-600 border-gray-300 focus:ring-red-500">
+                        <span class="ml-3 text-sm text-gray-700 group-hover:text-red-700 transition">
+                            ข้าพเจ้ายินยอมให้สถานศึกษาจัดเก็บ ใช้ และเผยแพร่ข้อมูลตามที่ระบุในแบบฟอร์มนี้ เพื่อใช้ในการดำเนินการทางการศึกษาตามพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล (PDPA) และขอรับรองว่าข้อมูลทั้งหมดเป็นความจริงทุกประการ <span class="text-red-500 font-bold">*</span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- ปุ่มส่งข้อมูลและล้างข้อมูล -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 border-t border-gray-100">
+                    <button type="submit" class="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-red-700 to-red-600 hover:from-red-800 hover:to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-red-500/20 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150 flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-paper-plane"></i>
+                        ส่งข้อมูลใบสมัคร
+                    </button>
+                    <button type="reset" class="w-full sm:w-auto px-8 py-4 bg-white hover:bg-gray-50 text-gray-500 hover:text-red-600 font-bold rounded-xl border border-gray-300 hover:border-red-300 transition-all duration-150 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>
+                        ล้างข้อมูลฟอร์ม
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Modal แสดงผลสําเร็จ (Success Dialog) -->
+    <div id="successModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl max-w-md w-full mx-4 p-8 border border-red-500 shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="text-center">
+                <!-- Icon Animated Wrapper -->
+                <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">ส่งข้อมูลสำเร็จ!</h3>
+                <p class="text-gray-600 mb-6 text-sm">ข้อมูลนักเรียนได้รับการบันทึกและตรวจสอบโดยฝ่ายทะเบียนเรียบร้อยแล้ว</p>
+                
+                <!-- Quick Summary Box -->
+                <div class="bg-red-50/50 border border-red-100 rounded-2xl p-4 mb-6 text-left space-y-2 text-xs text-gray-700">
+                    <div><strong>ชื่อ-นามสกุล:</strong> <span id="summaryName">-</span></div>
+                    <div><strong>เลขประจำตัว:</strong> <span id="summaryId">-</span></div>
+                    <div><strong>ระดับชั้น:</strong> <span id="summaryGrade">-</span> แผนการเรียน <span id="summaryPlan">-</span></div>
+                    <div><strong>สีที่ชอบ:</strong> <span id="summaryColor" class="inline-block w-3 h-3 rounded-full mr-1 align-middle border border-gray-300"></span> <span id="summaryColorHex">-</span></div>
+                </div>
+
+                <button onclick="closeModal()" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md transition">
+                    กลับสู่หน้าแบบฟอร์ม
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. ฟังก์ชันคำนวณอายุจากวันเกิด (Auto Calculate Age)
+        function calculateAge() {
+            const dobInput = document.getElementById('dob').value;
+            if (!dobInput) return;
+
+            const dob = new Date(dobInput);
+            const today = new Date();
+            
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            const ageField = document.getElementById('age');
+            if (age >= 0) {
+                ageField.value = age;
+            } else {
+                ageField.value = 0;
+            }
+        }
+
+        // 2. พรีวิวรูปภาพหลังอัปโหลด (Image Instant Preview)
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                document.getElementById('avatarPreview').src = e.target.result;
+            };
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 3. ปรับรหัสสีฐานสิบหกในหน้าจอ (Live Color Picker UI change)
+        function updateColorHex(colorHex) {
+            document.getElementById('colorHexText').innerText = colorHex;
+        }
+
+        // 4. จัดการปุ่มรีเซ็ตแบบฟอร์ม (Handle Reset)
+        function handleFormReset() {
+            // คืนค่าพรีวิวรูปภาพเดิม
+            document.getElementById('avatarPreview').src = "https://placehold.co/150x150/fee2e2/dc2626?text=Avatar";
+            document.getElementById('colorHexText').innerText = "#dc2626";
+            
+            // เลื่อนฟอร์มกลับไปข้างบนสุดเพื่อความสะดวกของผู้ใช้
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 5. บันทึกและแสดงป๊อปอัปหลังจากกดยืนยัน (Form Submit Handler)
+        function handleFormSubmit(event) {
+            event.preventDefault(); // ป้องกันการ Refresh หน้า
+
+            // ค้นหาค่าเพื่อพรีวิวในหน้าจอสรุป
+            const prefix = document.getElementById('prefix').value;
+            const fullName = document.getElementById('fullName').value;
+            const studentId = document.getElementById('studentId').value;
+            const gradeLevel = document.getElementById('gradeLevel').value;
+            const studyPlan = document.getElementById('studyPlan').value;
+            const favColor = document.getElementById('favColor').value;
+
+            // บรรจุข้อมูลใส่ Modal สรุปผล
+            document.getElementById('summaryName').innerText = `${prefix}${fullName}`;
+            document.getElementById('summaryId').innerText = studentId;
+            document.getElementById('summaryGrade').innerText = gradeLevel;
+            document.getElementById('summaryPlan').innerText = studyPlan;
+            
+            const summaryColorIndicator = document.getElementById('summaryColor');
+            summaryColorIndicator.style.backgroundColor = favColor;
+            document.getElementById('summaryColorHex').innerText = favColor;
+
+            // แสดงหน้าต่างโมดอลสำเร็จ
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('opacity-100');
+                modal.querySelector('div').classList.remove('scale-95');
+                modal.querySelector('div').classList.add('scale-100');
+            }, 50);
+        }
+
+        // 6. ปิดป๊อปอัปและล้างฟอร์ม (Close Modal)
+        function closeModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('opacity-100');
+            modal.querySelector('div').classList.remove('scale-100');
+            modal.querySelector('div').classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                // ล้างค่าทั้งหมดในฟอร์มเมื่อกดปิด
+                document.getElementById('studentRegistrationForm').reset();
+                handleFormReset();
+            }, 300);
+        }
+    </script>
+</body>
+</html>
